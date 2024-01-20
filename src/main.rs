@@ -16,10 +16,18 @@ struct Args {
     /// The number of requests to make
     #[arg(short, long, default_value_t = 10)]
     requests: u8,
-    
+
     /// The delay between requests (in ms)
     #[arg(short, long, default_value_t = 1000)]
     delay: u64,
+
+    /// Basic auth - username
+    #[arg(short='n', long)]
+    username: Option<String>,
+
+    /// Basic auth - password
+    #[arg(short, long)]
+    password: Option<String>,
 }
 
 error_chain! {
