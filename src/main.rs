@@ -46,12 +46,12 @@ async fn main() -> Result<()> {
         let status_code = res.status();
         if status_code.is_success() {
             println!("Request took {:?}", duration);
+            durations.push(duration);
+            thread::sleep(Duration::from_millis(args.delay));
         } else {
             println!("Status Code:{}", status_code.as_str());
             break;
         }
-        durations.push(duration);
-        thread::sleep(Duration::from_millis(args.delay));
     }
 
     let sum: Duration = durations.iter().sum();
