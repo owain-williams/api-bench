@@ -2,8 +2,7 @@ use clap::Parser;
 use error_chain::error_chain;
 use reqwest::Response;
 use std::{
-    thread,
-    time::{Duration, Instant},
+    process::exit, thread, time::{Duration, Instant}
 };
 
 /// Simple program to benchmark API endpoints, respecting rate limiting
@@ -48,17 +47,25 @@ async fn main() -> Result<()> {
         let start = Instant::now();
         // Perform request
         let client = reqwest::Client::new();
+        let parsed_url_result = reqwest::Url::parse(&args.url);
+        let parsed_url = match parsed_url_result {
+            Ok(url) => url.to_string(),
+            Err(e) => {
+                println!("Error parsing URL: {}", e.to_string());
+                exit(1);
+            }
+        };
         let res: Response;
         match args.username {
             Some(ref username) => {
                 res = client
-                    .get(&args.url)
+                    .get(&parsed_url)
                     .basic_auth(username, args.password.as_deref())
                     .send()
                     .await?;
             }
             None => {
-                res = client.get(&args.url).send().await?;
+                res = client.get(&parsed_url).send().await?;
             }
         }
 
@@ -72,8 +79,8 @@ async fn main() -> Result<()> {
             durations.push(duration);
             thread::sleep(Duration::from_millis(args.delay));
         } else {
-            println!("Status Code:{}", status_code.as_str());
-            break;
+            println!("Status Code: {}", status_code.as_str());
+            exit(2);
         }
     }
 
