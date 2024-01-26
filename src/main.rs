@@ -1,9 +1,10 @@
+use clap::Parser;
 use error_chain::error_chain;
+use reqwest::Response;
 use std::{
     thread,
     time::{Duration, Instant},
 };
-use clap::Parser;
 
 /// Simple program to benchmark API endpoints, respecting rate limiting
 #[derive(Parser, Debug)]
@@ -22,7 +23,7 @@ struct Args {
     delay: u64,
 
     /// Basic auth - username
-    #[arg(short='n', long)]
+    #[arg(short = 'n', long)]
     username: Option<String>,
 
     /// Basic auth - password
@@ -46,7 +47,21 @@ async fn main() -> Result<()> {
         // Start Timing
         let start = Instant::now();
         // Perform request
-        let res = reqwest::get(&args.url).await?;
+        let client = reqwest::Client::new();
+        let res: Response;
+        match args.username {
+            Some(ref username) => {
+                res = client
+                    .get(&args.url)
+                    .basic_auth(username, args.password.as_deref())
+                    .send()
+                    .await?;
+            }
+            None => {
+                res = client.get(&args.url).send().await?;
+            }
+        }
+
         // Stop Timing
         let duration = start.elapsed();
 
